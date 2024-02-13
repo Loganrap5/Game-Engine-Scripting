@@ -1,72 +1,255 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HanoiTower : MonoBehaviour
 {
-    public int[] peg1 = { 1, 2, 3, 4, 5, 6, 7, 8 };
-    public int[] peg2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    public int[] peg3 = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    [SerializeField] private Transform peg1Transform;
+    [SerializeField] private Transform peg2Transform;
+    [SerializeField] private Transform peg3Transform;
 
-    public int currentPeg = 1;
+    //win message
+    [SerializeField] private GameObject winMessage;
+
+    [SerializeField] private int[] peg1 = { 1, 2, 3, 4 };
+    [SerializeField] private int[] peg2 = { 0, 0, 0, 0 };
+    [SerializeField] private int[] peg3 = { 0, 0, 0, 0 };
+
+    [SerializeField] private int currentPeg = 1;
+
+    //check win condition and see if peg 3 has the correct order
+    private bool WinCondition()
+    {
+        for(int i = 0; i < peg3.Length; i++)
+        {
+            if (peg3[i] != (i + 1))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+
+    }
+    
+    public void CheckWinCondition()
+    {
+        if(WinCondition())
+        {
+            if(true)
+            {
+                winMessage.SetActive(true);
+            }
+            else
+            {
+                
+            }
+        }
+    }
+
+    //create 3 image instances to change peg colors based on which peg is selected
+    public Image pegOne;
+    public Image pegTwo;
+    public Image pegThree;
+
+    //check what peg is selected and change colors accordingly
+    public void SelectedPegColor()
+    {
+        if (currentPeg == 1)
+        {
+            pegOne.color = Color.gray;
+            pegTwo.color = Color.black;
+            pegThree.color = Color.black;
+        }
+        if(currentPeg == 2)
+        {
+            pegOne.color = Color.black;
+            pegTwo.color = Color.gray;
+            pegThree.color = Color.black;
+        }
+        if (currentPeg == 3)
+        {
+            pegOne.color = Color.black;
+            pegTwo.color = Color.black;
+            pegThree.color = Color.gray;
+        }
+    }
+
+    //have this method run every frame to check what the selected peg is and change the color to gray
+    //also checking for the win condition
+    public void Update()
+    {
+        SelectedPegColor();
+        CheckWinCondition();
+    }
+
+    
+
 
     [ContextMenu("Move Right")]
-    void MoveRight()
+    public void MoveRight()
     {
-        //get lists we are working with 
-        int[] currentList = GetPeg(currentPeg);
-        int[] targetList = GetPeg(currentPeg + 1);
+        //Make sure we aren't the right most peg
+        if (CanMoveRight() == false) return;
 
-        //check that target list is a real list
-        if (targetList == null) return;
+        //Check to see what index and number we are moving from THIS peg
+        int[] fromArray = GetPeg(currentPeg);
+        int fromIndex = GetTopNumberIndex(fromArray);
 
-        //get the top number index from the current list
-        int fromIndex = GetTopNumberIndex(currentList);
-        //get the bottom most free index from the target list
-        int toIndex = GetBottomNumberIndex(targetList);
+        //If there wasn't anything to move then don't try to move
+        if (fromIndex == -1) return;
 
-        //check that we were able to find a free spot in the target list
+        //Check to see where in the peg we are moving to that the number
+        //should be placed into
+        int[] toArray = GetPeg(currentPeg + 1);
+        int toIndex = GetBottomNumberIndex(toArray);
+
+        //If the adjacent peg is FULL then we cannot move anything into it
+        //This probably will never happen since the max number of numbers
+        //we have is the size of each peg
         if (toIndex == -1) return;
 
-        //check that the hnumber we want to move does not break our rules
-        //for moving between pegs (no big numbers on top of small numbers)
-        if (CanMoveIntoPeg(currentList[fromIndex], currentList) == false) return;
+        //Lastly check to verify the number we are moving is not larger
+        //than whatever number we may be placing this number on top of
+        //on the adjacent peg
+        if (CanAddToPeg(fromArray[fromIndex], toArray) == false) return;
 
-        MoveIntoPeg(fromIndex, toIndex, currentList, targetList);
+        //If all checks PASS then go aheand and move the number
+        //out of THIS array into the adjacent array
+        MoveNumber(fromArray, fromIndex, toArray, toIndex);
+
+        Transform disc = PopDiscFromCurrentPeg();
+        Transform toPeg = GetPegTransform(currentPeg + 1);
+
+        disc.SetParent(toPeg);
     }
 
     [ContextMenu("Move Left")]
-    void MoveLeft()
+    public void MoveLeft()
     {
-        //get lists we are working with 
-        int[] currentList = GetPeg(currentPeg);
-        int[] targetList = GetPeg(currentPeg - 1);
+        //Make sure we aren't the left most peg
+        if (CanMoveLeft() == false) return;
 
-        //check that target list is a real list
-        if (targetList == null) return;
+        //Check to see what index and number we are moving from THIS peg
+        int[] fromArray = GetPeg(currentPeg);
+        int fromIndex = GetTopNumberIndex(fromArray);
 
-        //get the top number index from the current list
-        int fromIndex = GetTopNumberIndex(currentList);
-        //get the bottom most free index from the target list
-        int toIndex = GetBottomNumberIndex(targetList);
+        //If there wasn't anything to move then don't try to move
+        if (fromIndex == -1) return;
 
-        //check that we were able to find a free spot in the target list
+        //Check to see where in the peg we are moving to that the number
+        //should be placed into
+        int[] toArray = GetPeg(currentPeg - 1);
+        int toIndex = GetBottomNumberIndex(toArray);
+
+        //If the adjacent peg is FULL then we cannot move anything into it
+        //This probably will never happen since the max number of numbers
+        //we have is the size of each peg
         if (toIndex == -1) return;
 
-        //check that the hnumber we want to move does not break our rules
-        //for moving between pegs (no big numbers on top of small numbers)
-        if (CanMoveIntoPeg(currentList[fromIndex], currentList) == false) return;
+        //Lastly check to verify the number we are moving is not larger
+        //than whatever number we may be placing this number on top of
+        //on the adjacent peg
+        if (CanAddToPeg(fromArray[fromIndex], toArray) == false) return;
 
-        MoveIntoPeg(fromIndex, toIndex, currentList, targetList);
+        //If all checks PASS then go aheand and move the number
+        //out of THIS array into the adjacent array
+        MoveNumber(fromArray, fromIndex, toArray, toIndex);
+
+        Transform disc = PopDiscFromCurrentPeg();
+        Transform toPeg = GetPegTransform(currentPeg - 1);
+
+        disc.SetParent(toPeg);
+    }
+
+    public void IncrementPegNumber()
+    {
+        currentPeg++;
+
+        //make sure we cannot go out of bounds for the amount of pegs we have
+        if (currentPeg == 4)
+        {
+            currentPeg = 3;
+        }
+    }
+
+    public void DecrementPegNumber()
+    {
+        currentPeg--;
+
+        //make sure we cannot go out of bounds for the amount of pegs we have
+        if (currentPeg == 0)
+        {
+            currentPeg = 1;
+        }
+        
+    }
+
+    Transform PopDiscFromCurrentPeg()
+    {
+        Transform currentPegTransform = GetPegTransform(currentPeg);
+        int index = currentPegTransform.childCount - 1;
+        Transform disk = currentPegTransform.GetChild(index);
+        return disk;
+    }
+
+    Transform GetPegTransform(int pegNumber)
+    {
+        if (pegNumber == 1) return peg1Transform;
+
+        if (pegNumber == 2) return peg2Transform;
+
+        return peg3Transform;
+    }
+    void MoveNumber(int[] fromArr, int fromIndex, int[] toArr, int toIndex)
+    {
+        int value = fromArr[fromIndex];
+        fromArr[fromIndex] = 0;
+
+        toArr[toIndex] = value;
+    }
+
+    bool CanMoveRight()
+    {
+        //If peg 1 or 2 then can move right
+        return currentPeg < 3;
+    }
+
+    bool CanAddToPeg(int value, int[] peg)
+    {
+        int topNumberIndex = GetTopNumberIndex(peg);
+        if(topNumberIndex == -1) return true;
+
+        int topNumber = peg[topNumberIndex];
+        return topNumber > value;
+    }
+
+    bool CanMoveLeft()
+    {
+        //If peg 2 or 3 then can move right
+        return currentPeg > 1;
+    }
+
+    int[] GetPeg(int pegNumber)
+    {
+        
+
+        if (pegNumber == 1) return peg1;
+
+        if (pegNumber == 2) return peg2;
+
+        return peg3;
     }
 
     int GetTopNumberIndex(int[] peg)
     {
-        for(int i =0; i < peg.Length; i++)
+        for (int i = 0; i < peg.Length; i++)
         {
-            //if the value for the index in the peg is not a 0
             if (peg[i] != 0) return i;
         }
+
         return -1;
     }
 
@@ -74,38 +257,9 @@ public class HanoiTower : MonoBehaviour
     {
         for (int i = peg.Length - 1; i >= 0; i--)
         {
-            //if the value for the index in the peg is not a 0
             if (peg[i] == 0) return i;
         }
+
         return -1;
     }
-
-    bool CanMoveIntoPeg(int numberToMove, int[] peg)
-    {
-        int bottomIndex = GetBottomNumberIndex(peg);
-
-        if (bottomIndex == peg.Length - 1 && peg[peg.Length - 1] == 0) return true;
-
-        int bottomPlus1 = bottomIndex + 1;
-        return bottomPlus1 == 0;
-        
-    }
-
-    void MoveIntoPeg(int fromIndex, int toIndex, int[] from, int[] to)
-    {
-        int numberToMove = from[fromIndex];
-        from[fromIndex] = 0;
-        to[toIndex] = numberToMove;
-    }
-
-    int[] GetPeg(int peg)
-    {
-        if (peg == 1) return peg1;
-        if (peg == 2) return peg2;
-        if (peg == 3) return peg3;
-        return null;
-    }
-
-
-    
 }
