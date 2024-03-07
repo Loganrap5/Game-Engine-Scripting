@@ -15,10 +15,12 @@ namespace Week7
 
         [SerializeField] TextMeshProUGUI healthText;
         [SerializeField] TextMeshProUGUI keysText;
+        [SerializeField] TextMeshProUGUI coinsText;
 
 
         [SerializeField] public int health;
         [SerializeField] public int keys;
+        [SerializeField] public int coins;
 
         public PlayerControls playerControls;
 
@@ -59,6 +61,11 @@ namespace Week7
             keys++;
         }
 
+        public void CollectCoin()
+        {
+            coins++;
+        }
+
         private void OnEnable()
         {
             move.Enable();
@@ -81,6 +88,7 @@ namespace Week7
         {
             healthText.text = $"Health : {health}";
             keysText.text = $"Keys : {keys}";
+            coinsText.text = $"Coins : {coins}";
         }
 
         private void Update()
