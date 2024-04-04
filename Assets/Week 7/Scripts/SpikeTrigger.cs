@@ -18,5 +18,20 @@ public class SpikeTrigger : MonoBehaviour
         
     }
 
-    
+    //private void OnEnable()
+    //{
+    //    GameManager.endGame.AddListener(ResetTrap);
+    //}
+
+    //private void OnDisable()
+    //{
+    //    GameManager.endGame.RemoveListener(ResetTrap);
+    //}
+
+    //private void ResetTrap()
+    //{
+    //    gameObject.SetActive(true);
+    //}
+
+
 }

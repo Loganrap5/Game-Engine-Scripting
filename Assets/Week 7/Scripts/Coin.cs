@@ -3,22 +3,61 @@ using System.Collections.Generic;
 using UnityEngine;
 using Week7;
 
-public class Coin : MonoBehaviour
+namespace Week7
 {
-    private float rotateSpeed = 25f;
-
-    private void OnTriggerEnter(Collider other)
+    public class Coin : MonoBehaviour
     {
-        if (other.transform.name == "Player")
+        private float rotateSpeed = 25f;
+
+        //initial position of each coin
+        private Vector3 initialPosition;
+        private void Start()
         {
-            other.GetComponent<Player>().CollectCoin();
+            initialPosition = transform.position;
         }
-        Destroy(this.gameObject);
-    }
 
-    private void Update()
-    {
-        transform.Rotate(Vector3.up, rotateSpeed * Time.deltaTime);
-    }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.transform.name == "Player")
+            {
+                other.GetComponent<Player>().CollectCoin();
+                gameObject.SetActive(false);
+            }
+        }
+
+        private void Update()
+        {
+            transform.Rotate(Vector3.up, rotateSpeed * Time.deltaTime);
+        }
+
+        //subscribe the coins to the Restart Game event 
+        private void OnEnable()
+        {
+            GameManager.restartGame.AddListener(EnableCoin);
+        }
+
+        private void OnDisable()
+        {
+            GameManager.restartGame.RemoveListener(DisableCoin);
+        }
+
+        private void EnableCoin()
+        {
+            gameObject.SetActive(true);
+            //move coin back to origianl position
+            transform.position = initialPosition;
+
+        }
+
+        private void DisableCoin()
+        {
+            gameObject.SetActive(false);
+            transform.position = initialPosition;
+        }
+
+
+
+
+    }
 }

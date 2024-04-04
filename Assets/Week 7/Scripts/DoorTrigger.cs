@@ -47,7 +47,6 @@ public class DoorTrigger : MonoBehaviour
                 isOpening = true;
                 unlocked = true;
                 player.keys--;
-                Debug.Log("Door opened");
             }
             else if (player.keys == 0)
             {
@@ -72,11 +71,19 @@ public class DoorTrigger : MonoBehaviour
     }
 
 
-    // Start is called before the first frame update
-    void Start()
+    //subsrcibe the doors to lock them all after game restarts
+    private void OnEnable()
     {
-        
+        GameManager.restartGame.AddListener(ResetDoors);
     }
 
-    
+    private void OnDisable()
+    {
+        GameManager.restartGame.RemoveListener(ResetDoors);
+    }
+
+    private void ResetDoors()
+    {
+        unlocked = false;
+    }
 }

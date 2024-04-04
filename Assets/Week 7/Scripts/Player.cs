@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -37,6 +38,13 @@ namespace Week7
 
         Rigidbody rb;
 
+        //inital position of player for restarting
+        private Vector3 initialPosition;
+        private void Start()
+        {
+            initialPosition = transform.position;
+        }
+
         private void Awake()
         {
             playerControls = new PlayerControls();
@@ -54,6 +62,11 @@ namespace Week7
         public void TakeDamage(int damage)
         {
             health -= damage;
+
+            if(health <= 0)
+            {
+                GameManager.EndGame();
+            }
         }
 
         public void CollectKey()
@@ -66,6 +79,31 @@ namespace Week7
             coins++;
         }
 
+        private void ResetPlayer()
+        {
+            health = 100;
+            keys = 0;
+            coins = 0;
+
+            //unpause the characters movement
+            move.Enable();
+            look.Enable();
+            jump.Enable();
+            fire.Enable();
+
+            //move player back to beginning
+            transform.position = initialPosition;
+        }
+
+        //puase player function so it doesnt allow movement while the menu is enabled
+        private void PausePlayer()
+        {
+            move.Disable();
+            look.Disable();
+            jump.Disable();
+            fire.Disable();
+        }
+
         private void OnEnable()
         {
             move.Enable();
@@ -74,6 +112,11 @@ namespace Week7
             jump.Enable();
             jump.performed += Jump;
             fire.performed += Fire;
+            
+            //Events for pausing game as well as restarting
+            GameManager.restartGame.AddListener(ResetPlayer);
+
+            GameManager.endGame.AddListener(PausePlayer);
         }
 
         private void OnDisable()
@@ -82,6 +125,11 @@ namespace Week7
             jump.Disable();
             look.Disable();
             fire.Disable();
+
+            //Events for pausing game as well as restarting
+            GameManager.restartGame.RemoveListener(ResetPlayer);
+
+            GameManager.endGame.RemoveListener(PausePlayer);
         }
 
         private void PlayerUI()
@@ -186,6 +234,11 @@ namespace Week7
             Debug.Log("I fired");
             Instantiate(bulletPrefab, transform.position, Camera.main.transform.rotation);
         }
+
+        
+
+        
+        
 
     }
 }

@@ -13,11 +13,34 @@ public class Key : MonoBehaviour
          {
              other.GetComponent<Player>().CollectKey();
          }
-         Destroy(this.gameObject);   
+         gameObject.SetActive(false);
+        
     }
 
     private void Update()
     {
         transform.Rotate(Vector3.down, rotateSpeed * Time.deltaTime);
+    }
+
+    //subscribe the keys to the Restart Game event 
+    private void OnEnable()
+    {
+        GameManager.restartGame.AddListener(EnableKey);
+    }
+
+    private void OnDisable()
+    {
+        GameManager.restartGame.RemoveListener(DisableKey);
+    }
+
+
+    private void EnableKey()
+    {
+        gameObject.SetActive(true);
+    }
+
+    private void DisableKey()
+    {
+        gameObject.SetActive(false);
     }
 }
